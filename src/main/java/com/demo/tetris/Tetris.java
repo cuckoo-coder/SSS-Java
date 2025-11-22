@@ -10,28 +10,40 @@ import javax.swing.JFrame;
  *
  * @author macairm1
  */
-public class WindowGame {
+public class Tetris {
     
-    public static final int WIDTH = 445, HEIGHT=629;
+    public static final int WIDTH = 445, HEIGHT=640;
     
     
     private Board board;
+    private Title title;
     private JFrame window;
     
-    public WindowGame(){
+    public Tetris(){
         window = new JFrame("Tetris");
-        window.setSize(WIDTH,HEIGHT);
+        window.setSize(WIDTH, HEIGHT);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setResizable(false);
         window.setLocationRelativeTo(null);
-        
+        window.setResizable(false);
+
         board = new Board();
-        window.add(board);
+        title = new Title(this);
+
         window.addKeyListener(board);
+
+        window.add(title);
+
         window.setVisible(true);
     }
-    
+    public void startTetris() {
+        window.remove(title);
+        board.addMouseMotionListener(board);
+        board.addMouseListener(board);
+        window.add(board);
+        board.startGame();
+        window.revalidate();
+    }
     public static void main(String[] args){
-        new WindowGame();
+        new Tetris();
     }
 }

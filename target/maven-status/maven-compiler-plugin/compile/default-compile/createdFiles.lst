@@ -1,3 +1,8 @@
-com/demo/tetris/WindowGame.class
-com/demo/tetris/Board.class
-com/demo/tetris/Board$1.class
+com\demo\tetris\Title.class
+com\demo\tetris\Board$1.class
+com\demo\tetris\Board.class
+com\demo\tetris\ImageLoader.class
+com\demo\tetris\Shape.class
+com\demo\tetris\Tetris.class
+com\demo\tetris\Title$1.class
+com\demo\tetris\Board$GameLooper.class
