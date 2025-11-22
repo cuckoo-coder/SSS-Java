@@ -12,7 +12,7 @@ import javax.swing.JFrame;
  */
 public class Tetris {
     
-    public static final int WIDTH = 445, HEIGHT=640;
+    public static final int WIDTH = 450, HEIGHT=640;
     
     
     private Board board;
@@ -42,6 +42,13 @@ public class Tetris {
         window.add(board);
         board.startGame();
         window.revalidate();
+    }
+    public void backToTitle() {
+        window.remove(board);
+        title = new Title(this);
+        window.add(title);
+        window.revalidate();
+        window.repaint();
     }
     public static void main(String[] args){
         new Tetris();

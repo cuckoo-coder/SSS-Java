@@ -43,8 +43,10 @@ private static final long serialVersionUID = 1L;
     private Shape shapes[] = new Shape[7];
     private static Shape currentShape, nextShape;
     
-    private BufferedImage pause, refresh;
+    private BufferedImage pause, refresh, bgsetting, homeButton;
     private Rectangle stopBounds, refreshBounds;
+    private Rectangle pauseBoundsCenter; 
+    private Rectangle homeBounds;
     
     private int mouseX, mouseY;
 
@@ -55,6 +57,7 @@ private static final long serialVersionUID = 1L;
     private boolean gamePaused = false;
 
     private boolean gameOver = false;
+    
     
     //coin animation
     private int score = 0;
@@ -76,6 +79,8 @@ private static final long serialVersionUID = 1L;
         refresh = ImageLoader.loadImage("/RESTART.png");
         bgBoard = ImageLoader.loadImage("/BACKGROUND2.png");
         coinSheet = ImageLoader.loadImage("/coin_sheet.png");
+        bgsetting = ImageLoader.loadImage("/main_1.png");
+        homeButton = ImageLoader.loadImage("/HOME.png");
         
         int frameCount = 6;                             // số frame
         int frameWidth  = coinSheet.getWidth() / frameCount;
@@ -95,8 +100,20 @@ private static final long serialVersionUID = 1L;
         int btnW = 60;
         int btnH = 40;
         stopBounds = new Rectangle(340, 500, btnW, btnH);
-        refreshBounds = new Rectangle(340, 450, btnW, btnH);
-        
+        pauseBoundsCenter = new Rectangle(
+        Tetris.WIDTH / 2 - btnW / 2,
+        Tetris.HEIGHT / 2 - btnH / 2,
+        btnW, btnH);
+//        refreshBounds = new Rectangle(340, 450, btnW, btnH);
+        refreshBounds = new Rectangle(
+        Tetris.WIDTH / 2 - btnW / 2,
+        Tetris.HEIGHT / 2 - 100,
+        btnW, btnH);
+        homeBounds = new Rectangle(
+            Tetris.WIDTH / 2 - btnW / 2,
+            Tetris.HEIGHT / 2 + 80,  // dưới nút Restart
+            btnW, btnH
+        );
         looper = new Timer(delay, new GameLooper());
         
         shapes[0] = new Shape(new int[][]{{1,1,1,1}},
@@ -148,14 +165,37 @@ private static final long serialVersionUID = 1L;
     }
     private void update(){
         
-        if (stopBounds.contains(mouseX, mouseY) && leftClick && !buttonLapse.isRunning() && !gameOver) {
-            buttonLapse.start();
-            gamePaused = !gamePaused;
+    if (!gamePaused) {
+        if (stopBounds.contains(mouseX, mouseY) &&
+            leftClick && !buttonLapse.isRunning() && !gameOver) {
+                buttonLapse.start();
+                gamePaused = true;
         }
+    } else {
+        // Đang ở màn setting → dùng nút pause ở giữa
+        if (pauseBoundsCenter.contains(mouseX, mouseY) &&
+            leftClick && !buttonLapse.isRunning()) {
 
-        if (refreshBounds.contains(mouseX, mouseY) && leftClick) {
-            startGame();
+            buttonLapse.start();
+            gamePaused = false;   // tắt setting, tiếp tục game
         }
+        if (refreshBounds.contains(mouseX, mouseY) &&
+            leftClick && !buttonLapse.isRunning()) {
+
+            gamePaused = false;  
+            startGame();         
+        }
+    }
+    if(gameOver)
+    {
+       if (refreshBounds.contains(mouseX, mouseY) &&
+            leftClick && !buttonLapse.isRunning()) {
+
+            gamePaused = false;  
+            startGame();         
+        } 
+    }
+        
 
         if (gamePaused || gameOver) {
             return;
@@ -193,6 +233,21 @@ private static final long serialVersionUID = 1L;
         super.paintComponent(g);
 //        g.setColor(Color.black);
 //        g.fillRect(0, 0, getWidth(), getHeight());
+        g.setColor(Color.WHITE);
+
+        g.setFont(new Font("Georgia", Font.BOLD, 30));
+        g.drawString(score + "", Tetris.WIDTH - 80, Tetris.HEIGHT / 2 + 25);
+        if (coinFrames != null) {
+            BufferedImage frame = coinFrames[coinFrameIndex];
+
+            int coinDrawWidth  = 30;  
+            int coinDrawHeight = 30;
+
+            int coinX = 35;
+            int coinY = 60;
+
+            g.drawImage(frame, Tetris.WIDTH - 125, Tetris.HEIGHT / 2, coinDrawWidth, coinDrawHeight, null);
+        }
         g.drawImage(bgBoard, 0, 0, getWidth(), getHeight(), null);
         currentShape.render(g);
         
@@ -229,41 +284,62 @@ private static final long serialVersionUID = 1L;
         } else {
             g.drawImage(pause, stopBounds.x, stopBounds.y, normalW, normalH, null);
         }
-        if (refreshBounds.contains(mouseX, mouseY)) {
-            g.drawImage(refresh, 
-                    refreshBounds.x, refreshBounds.y, 
-                    hoverW, hoverH, 
-                    null);
-        } else {
-            g.drawImage(refresh, refreshBounds.x, refreshBounds.y, normalW, normalH, null);
+        
+        if (!gamePaused) {
+            if (stopBounds.contains(mouseX, mouseY)) {
+                g.drawImage(pause,
+                            stopBounds.x, stopBounds.y,
+                            hoverW, hoverH, null);
+            } else {
+                g.drawImage(pause,
+                            stopBounds.x, stopBounds.y,
+                            normalW, normalH, null);
+            }
         }
         if (gamePaused) {
+            
+            g.drawImage(bgsetting, 0, 0, getWidth(), getHeight(), null);
             String gamePausedString = "GAME PAUSED";
             g.setColor(Color.WHITE);
             g.setFont(new Font("Georgia", Font.BOLD, 30));
-            g.drawString(gamePausedString, 35, Tetris.HEIGHT / 2);
+            g.drawString(gamePausedString, 100, Tetris.HEIGHT - 550);
+            if (pauseBoundsCenter.contains(mouseX, mouseY)) {
+                g.drawImage(pause,
+                            pauseBoundsCenter.x, pauseBoundsCenter.y,
+                            hoverW, hoverH, null);
+            } else {
+                g.drawImage(pause,
+                            pauseBoundsCenter.x, pauseBoundsCenter.y,
+                            normalW, normalH, null);
+            }
+            if (refreshBounds.contains(mouseX, mouseY)) {
+                g.drawImage(refresh, 
+                        refreshBounds.x,
+                        refreshBounds.y, 
+                        hoverW, hoverH, 
+                        null);
+            } else {
+                g.drawImage(refresh, refreshBounds.x, refreshBounds.y, normalW, normalH, null);
+            }
+            
         }
         if (gameOver) {
+            g.drawImage(bgsetting, 0, 0, getWidth(), getHeight(), null);
             String gameOverString = "GAME OVER";
             g.setColor(Color.WHITE);
             g.setFont(new Font("Georgia", Font.BOLD, 30));
-            g.drawString(gameOverString, 50, Tetris.HEIGHT / 2);
+            g.drawString(gameOverString, 100, Tetris.HEIGHT - 550);
+            if (refreshBounds.contains(mouseX, mouseY)) {
+                g.drawImage(refresh, 
+                        refreshBounds.x,
+                        refreshBounds.y, 
+                        hoverW, hoverH, 
+                        null);
+            } else {
+                g.drawImage(refresh, refreshBounds.x, refreshBounds.y, normalW, normalH, null);
+            }
         }
-        g.setColor(Color.WHITE);
-
-        g.setFont(new Font("Georgia", Font.BOLD, 30));
-        g.drawString(score + "", Tetris.WIDTH - 80, Tetris.HEIGHT / 2 + 25);
-        if (coinFrames != null) {
-            BufferedImage frame = coinFrames[coinFrameIndex];
-
-            int coinDrawWidth  = 30;  
-            int coinDrawHeight = 30;
-
-            int coinX = 35;
-            int coinY = 60;
-
-            g.drawImage(frame, Tetris.WIDTH - 125, Tetris.HEIGHT / 2, coinDrawWidth, coinDrawHeight, null);
-        }
+        
         
     }
     

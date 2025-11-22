@@ -77,12 +77,6 @@ public class Title extends JPanel implements  MouseListener, MouseMotionListener
 
                 
                 g.drawImage(background, 0, 0, Tetris.WIDTH, Tetris.HEIGHT, null);
-		
-		if(isShowHelp)
-                {
-                    g.drawImage(instructions, Tetris.WIDTH/2 - instructions.getWidth()/2 - 5, 30 - instructions.getHeight()/2 + 150, null);
-                }
-		
 		String game_name = "TETRIS";
                 g.setColor(Color.YELLOW);
                 g.setFont(new Font("Georgia", Font.BOLD, 60));
@@ -91,8 +85,13 @@ public class Title extends JPanel implements  MouseListener, MouseMotionListener
                 int x = (Tetris.WIDTH - textWidth) / 2;
 
                 int y = 200;
-
                 g.drawString(game_name, x, y);
+		if(isShowHelp)
+                {
+                    g.drawImage(instructions, Tetris.WIDTH/2 - instructions.getWidth()/2 - 5, 30 - instructions.getHeight()/2 + 150, null);
+                }
+		
+		
 		int normalW = 120;
                 int normalH = 50;
                 int hoverW = 125;
