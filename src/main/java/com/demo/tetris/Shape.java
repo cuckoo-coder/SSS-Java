@@ -131,6 +131,7 @@ public class Shape {
             }
         }
         coords = rotatedShape;
+        Sound.playRotate();
     }
     private int[][] reverseRows(int[][] matrix) { // đổi vị trí 
 
@@ -159,6 +160,7 @@ public class Shape {
             }
             if(count < board.getBoard()[0].length){
                 bottomLine--;
+                Sound.playClear();
             }
         }
     }
@@ -187,10 +189,12 @@ public class Shape {
 
     public void moveRight() {
         deltaX = 1;
+        Sound.playMove();
     }
 
     public void moveLeft() {
         deltaX = -1;
+        Sound.playMove();
     }
     public Color getColor() {
         return color;
