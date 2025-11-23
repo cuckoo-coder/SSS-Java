@@ -17,6 +17,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Random;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -60,6 +68,8 @@ private static final long serialVersionUID = 1L;
     
     
     //coin animation
+    
+    private long bestscore=0;
     private int score = 0;
     private BufferedImage coinSheet;      
     private BufferedImage[] coinFrames;   
@@ -82,6 +92,11 @@ private static final long serialVersionUID = 1L;
         bgsetting = ImageLoader.loadImage("/main_1.png");
         homeButton = ImageLoader.loadImage("/HOME.png");
         
+        File file = new File("bestscore.dat");
+        if(file.length()==0){
+            bestscore=0;
+        }
+        else bestscore = getBestscore();
         int frameCount = 6;                             // số frame
         int frameWidth  = coinSheet.getWidth() / frameCount;
         int frameHeight = coinSheet.getHeight();
@@ -116,6 +131,8 @@ private static final long serialVersionUID = 1L;
         );
         looper = new Timer(delay, new GameLooper());
         
+        
+        //vẽ các khối
         shapes[0] = new Shape(new int[][]{{1,1,1,1}},
                 this, colors[0]);
         shapes[1] = new Shape(new int[][]{
@@ -163,38 +180,41 @@ private static final long serialVersionUID = 1L;
 //        looper.start();
                 
     }
+    //logic game
     private void update(){
-        
-    if (!gamePaused) {
-        if (stopBounds.contains(mouseX, mouseY) &&
-            leftClick && !buttonLapse.isRunning() && !gameOver) {
+        if (score > bestscore) {
+            bestscore=score;
+        }
+        if (!gamePaused) {
+            if (stopBounds.contains(mouseX, mouseY) &&
+                leftClick && !buttonLapse.isRunning() && !gameOver) {
+                    buttonLapse.start();
+                    gamePaused = true;
+            }
+        } else {
+            // Đang ở màn setting → dùng nút pause ở giữa
+            if (pauseBoundsCenter.contains(mouseX, mouseY) &&
+                leftClick && !buttonLapse.isRunning()) {
+
                 buttonLapse.start();
-                gamePaused = true;
-        }
-    } else {
-        // Đang ở màn setting → dùng nút pause ở giữa
-        if (pauseBoundsCenter.contains(mouseX, mouseY) &&
-            leftClick && !buttonLapse.isRunning()) {
+                gamePaused = false;   // tắt setting, tiếp tục game
+            }
+            if (refreshBounds.contains(mouseX, mouseY) &&
+                leftClick && !buttonLapse.isRunning()) {
 
-            buttonLapse.start();
-            gamePaused = false;   // tắt setting, tiếp tục game
+                gamePaused = false;  
+                startGame();         
+            }
         }
-        if (refreshBounds.contains(mouseX, mouseY) &&
-            leftClick && !buttonLapse.isRunning()) {
+        if(gameOver)
+        {         
+           if (refreshBounds.contains(mouseX, mouseY) &&
+                leftClick && !buttonLapse.isRunning()) {
 
-            gamePaused = false;  
-            startGame();         
+                gamePaused = false;  
+                startGame();         
+            } 
         }
-    }
-    if(gameOver)
-    {
-       if (refreshBounds.contains(mouseX, mouseY) &&
-            leftClick && !buttonLapse.isRunning()) {
-
-            gamePaused = false;  
-            startGame();         
-        } 
-    }
         
 
         if (gamePaused || gameOver) {
@@ -202,16 +222,18 @@ private static final long serialVersionUID = 1L;
         }
         currentShape.update();
         coinFrameCounter++;
-        if (coinFrameCounter >= 8) {           
+        if (coinFrameCounter >= 80) {           
             coinFrameCounter = 0;
             coinFrameIndex = (coinFrameIndex + 1) % coinFrames.length;
         }
     }
+    
     public void setNextShape() {
         int index = random.nextInt(shapes.length);
         int colorIndex = random.nextInt(colors.length);
         nextShape = new Shape(shapes[index].getCoords(), this, colors[colorIndex]);
     }
+    
     public void setCurrentShape(){
 //        currentShape = shapes[random.nextInt(shapes.length)];
         currentShape = nextShape;
@@ -221,6 +243,9 @@ private static final long serialVersionUID = 1L;
                 if (currentShape.getCoords()[row][col] != 0) {
                     if (board[currentShape.getY() + row][currentShape.getX() + col] != null) {
                         gameOver = true;
+                        if (score >= bestscore) {
+                            saveScore(bestscore);  
+                        }
                     }
                 }
             }
@@ -228,15 +253,48 @@ private static final long serialVersionUID = 1L;
 //        currentShape.reset();
     }
     
+    public long getBestscore() {
+        try {
+            File file = new File("bestscore.dat");
+            if (!file.exists()) return 0;
+
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            int s1 = (Integer) ois.readObject();  
+            ois.close();
+            fis.close();
+            return s1;
+        } catch (Exception e) {
+            return 0; 
+        }
+    }
+    
+    public void saveScore(long s1){
+        try {
+            FileOutputStream fos = new FileOutputStream("bestscore.dat");
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(s1);  
+            oos.close();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 //        g.setColor(Color.black);
 //        g.fillRect(0, 0, getWidth(), getHeight());
+        g.drawImage(bgBoard, 0, 0, getWidth(), getHeight(), null);
+        currentShape.render(g);
         g.setColor(Color.WHITE);
 
         g.setFont(new Font("Georgia", Font.BOLD, 30));
         g.drawString(score + "", Tetris.WIDTH - 80, Tetris.HEIGHT / 2 + 25);
+        g.setFont(new Font("Georgia", Font.BOLD, 20));
+        g.drawString("Best score: " + bestscore , getWidth()-140 , getHeight()/2);
         if (coinFrames != null) {
             BufferedImage frame = coinFrames[coinFrameIndex];
 
@@ -248,8 +306,7 @@ private static final long serialVersionUID = 1L;
 
             g.drawImage(frame, Tetris.WIDTH - 125, Tetris.HEIGHT / 2, coinDrawWidth, coinDrawHeight, null);
         }
-        g.drawImage(bgBoard, 0, 0, getWidth(), getHeight(), null);
-        currentShape.render(g);
+        
         
         for (int row = 0; row < board.length; row++) {
                 for (int col = 0; col < board[row].length; col++) {
@@ -350,8 +407,10 @@ private static final long serialVersionUID = 1L;
     
     @Override
     public void keyTyped(KeyEvent e) {}
+    
+    
     public void startGame() {
-        stopGame();
+        stopGame();        
         setNextShape();
         setCurrentShape();
         gameOver = false;
@@ -388,8 +447,9 @@ private static final long serialVersionUID = 1L;
             currentShape.speedDown();
         }
     }
+    
+    
     class GameLooper implements ActionListener {
-
         @Override
         public void actionPerformed(ActionEvent e) {
             update();
@@ -397,9 +457,13 @@ private static final long serialVersionUID = 1L;
         }
 
     }
+    
+    //cong diem
     public void addScore() {
         score++;
     }
+    
+    
     @Override
     public void mouseClicked(MouseEvent e) {
         //throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
