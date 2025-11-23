@@ -33,7 +33,7 @@ import javax.swing.Timer;
  * @author macairm1
  */
 public class Board extends JPanel implements KeyListener, MouseListener, MouseMotionListener{
-private static final long serialVersionUID = 1L;    
+    private static final long serialVersionUID = 1L;    
     private static int FPS=60;
     private static int delay = FPS/1000;
     
@@ -69,7 +69,7 @@ private static final long serialVersionUID = 1L;
     
     //coin animation
     
-    private long bestscore=0;
+    private int bestscore=0;
     private int score = 0;
     private BufferedImage coinSheet;      
     private BufferedImage[] coinFrames;   
@@ -92,11 +92,7 @@ private static final long serialVersionUID = 1L;
         bgsetting = ImageLoader.loadImage("/main_1.png");
         homeButton = ImageLoader.loadImage("/HOME.png");
         
-        File file = new File("bestscore.dat");
-        if(file.length()==0){
-            bestscore=0;
-        }
-        else bestscore = getBestscore();
+        bestscore = getBestscore();
         int frameCount = 6;                             // số frame
         int frameWidth  = coinSheet.getWidth() / frameCount;
         int frameHeight = coinSheet.getHeight();
@@ -190,6 +186,7 @@ private static final long serialVersionUID = 1L;
                 leftClick && !buttonLapse.isRunning() && !gameOver) {
                     buttonLapse.start();
                     gamePaused = true;
+                    Sound.pauseBGM();
             }
         } else {
             // Đang ở màn setting → dùng nút pause ở giữa
@@ -198,6 +195,7 @@ private static final long serialVersionUID = 1L;
 
                 buttonLapse.start();
                 gamePaused = false;   // tắt setting, tiếp tục game
+                Sound.resumeBGM();
             }
             if (refreshBounds.contains(mouseX, mouseY) &&
                 leftClick && !buttonLapse.isRunning()) {
@@ -243,8 +241,13 @@ private static final long serialVersionUID = 1L;
                 if (currentShape.getCoords()[row][col] != 0) {
                     if (board[currentShape.getY() + row][currentShape.getX() + col] != null) {
                         gameOver = true;
-                        if (score >= bestscore) {
-                            saveScore(bestscore);  
+                        Sound.playGameOver();
+                        Sound.stopBGM();
+//                        System.out.println(score);
+//                        System.out.println(bestscore);
+                        if (score > bestscore) {
+                            bestscore = score;
+                            saveScore(score);
                         }
                     }
                 }
@@ -253,7 +256,7 @@ private static final long serialVersionUID = 1L;
 //        currentShape.reset();
     }
     
-    public long getBestscore() {
+    public int getBestscore() {
         try {
             File file = new File("bestscore.dat");
             if (!file.exists()) return 0;
@@ -265,11 +268,12 @@ private static final long serialVersionUID = 1L;
             fis.close();
             return s1;
         } catch (Exception e) {
+            e.printStackTrace();
             return 0; 
         }
     }
     
-    public void saveScore(long s1){
+    public void saveScore(int s1){
         try {
             FileOutputStream fos = new FileOutputStream("bestscore.dat");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -414,7 +418,9 @@ private static final long serialVersionUID = 1L;
         setNextShape();
         setCurrentShape();
         gameOver = false;
+        Sound.restartBGM();
         looper.start();
+
 
     }
     public void stopGame() {
