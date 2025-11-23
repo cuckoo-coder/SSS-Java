@@ -41,9 +41,11 @@ public class Tetris {
         board.addMouseListener(board);
         window.add(board);
         board.startGame();
+        Sound.restartBGM();
         window.revalidate();
     }
     public void backToTitle() {
+        Sound.stopBGM();
         window.remove(board);
         title = new Title(this);
         window.add(title);
