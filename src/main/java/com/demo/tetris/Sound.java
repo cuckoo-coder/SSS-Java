@@ -5,7 +5,7 @@ import java.io.File;
 
 public class Sound {
 
-    // 5 biến riêng biệt – dễ hiểu nhất
+    
     private static Clip bgm;
     private static Clip rotate;
     private static Clip move;
@@ -14,7 +14,7 @@ public class Sound {
 
     private static float volume = 0.6f; // âm lượng từ 0.0 đến 1.0
 
-    // Load tất cả âm thanh khi game khởi động
+    
     static {
         bgm      = loadClip("data/sound/bgm.wav");         // nhạc nền
         rotate   = loadClip("data/sound/rotate.wav");      // xoay khối
@@ -22,7 +22,7 @@ public class Sound {
         clear    = loadClip("data/sound/clear.wav");       // xóa dòng
         gameover = loadClip("data/sound/gameover.wav");   // thua cuộc
 
-        // Chỉ nhạc nền mới loop liên tục
+        // Chỉ nhạc nền mới liên tục
         if (bgm != null) {
             bgm.loop(Clip.LOOP_CONTINUOUSLY);
         }
@@ -94,13 +94,12 @@ public class Sound {
     
     public static void pauseBGM() {
         if (bgm != null && bgm.isRunning()) {
-            bgm.stop(); // Chỉ stop, không reset position
-        }
+            bgm.stop(); 
     }
 
     public static void resumeBGM() {
         if (bgm != null && !bgm.isRunning()) {
-            bgm.start(); // Tiếp tục từ vị trí cũ
+            bgm.start(); 
         }
     }
 
@@ -109,7 +108,7 @@ public class Sound {
             bgm.stop();
             bgm.setFramePosition(0); // Quay về đầu
             bgm.start();
-            bgm.loop(Clip.LOOP_CONTINUOUSLY); // Đảm bảo vẫn loop
+            bgm.loop(Clip.LOOP_CONTINUOUSLY); 
         }
     }
 
